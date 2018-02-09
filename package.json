@@ -1,0 +1,39 @@
+{
+  "name": "aws-billing-alerts",
+  "version": "0.0.0",
+  "description": "A simple AWS Lambda function that sends SNS alerts when your current month's bill changes.",
+  "homepage": "https://github.com/tdmalone/aws-billing-alerts#readme",
+  "repository": "git+https://github.com/tdmalone/aws-billing-alerts.git",
+  "main": "index.js",
+  "author": "Tim Malone <tdmalone@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "lint": "cross-env DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
+    "fix": "yarn lint --fix",
+    "test": "yarn unit-tests && yarn docker-tests",
+    "unit-tests": "jest --verbose --coverage",
+    "docker-tests": "docker run --rm -e CI -e SNS_TOPIC -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -v \"${PWD}\":/var/task lambci/lambda:nodejs6.10 index.handler \"$( cat tests/fixtures/sample-s3-event.json )\""
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "sns",
+    "aws-billing"
+  ],
+  "jest": {
+    "testMatch": [
+      "**/tests/**/*.js"
+    ]
+  },
+  "dependencies": {
+    "aws-sdk": "^2.170.0",
+    "csv-parse": "^2.0.2"
+  },
+  "devDependencies": {
+    "cross-env": "^5.1.0",
+    "eslint": "^4.8.0",
+    "eslint-config-tdmalone": "^0.0.1",
+    "jest": "^21.2.1",
+    "jest-tobetype": "^1.1.0"
+  }
+}
