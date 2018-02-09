@@ -4,21 +4,44 @@
  * @author Tim Malone <tdmalone@gmail.com>
  */
 
-const aws = require( 'aws-sdk' );
+const aws = require( 'aws-sdk' ),
+      parseCsv = require( 'csv-parse/lib/sync' );
+
 const SNS_TOPIC = process.env.SNS_TOPIC;
 
-exports.handler = (event, context, callback) => {
+exports.handler = ( event, context, callback ) => {
 
   // Get current monthly bill amount.
   // Store in S3.
   // Alert if it's different.
 
-  const message = 'Coming soon.';
+  const s3 = new aws.S3();
 
-  sendSnsMessage( message ).then( ( response ) => {
-    callback( null, response );
-  }).catch( ( error ) => {
-    callback( error );
+  const params = {
+    Bucket: event.Records[0].s3.bucket.name,
+    Key:    event.Records[0].s3.object.key
+  };
+
+  s3.getObject( params, ( error, data ) => {
+
+    if ( error ) {
+      callback( error );
+      return;
+    }
+
+    const csvData = parseCsv( data.Body.toString() );
+
+    // Second last line, immediately before the disclaimer.
+    const billingLineTotal = csvData.slice( -2, -1 )[0].pop();
+
+    const message = billingLineTotal;
+
+    sendSnsMessage( message ).then( ( response ) => {
+      callback( null, response );
+    }).catch( ( error ) => {
+      callback( error );
+    });
+
   });
 
 };
