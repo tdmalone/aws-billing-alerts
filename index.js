@@ -4,10 +4,17 @@
  * @author Tim Malone <tdmalone@gmail.com>
  */
 
+'use strict';
+
 const aws = require( 'aws-sdk' ),
       parseCsv = require( 'csv-parse/lib/sync' );
 
-const SNS_TOPIC = process.env.SNS_TOPIC;
+const SNS_TOPIC = process.env.SNS_TOPIC; // eslint-disable-line no-process-env
+
+const FIRST_ITEM = 0,
+      ONLY_ITEM = 0,
+      SECOND_LAST_LINE = -2,
+      LAST_LINE = -1;
 
 exports.handler = ( event, context, callback ) => {
 
@@ -18,8 +25,8 @@ exports.handler = ( event, context, callback ) => {
   const s3 = new aws.S3();
 
   const params = {
-    Bucket: event.Records[0].s3.bucket.name,
-    Key:    event.Records[0].s3.object.key
+    Bucket: event.Records[ FIRST_ITEM ].s3.bucket.name,
+    Key:    event.Records[ FIRST_ITEM ].s3.object.key
   };
 
   s3.getObject( params, ( error, data ) => {
@@ -32,9 +39,12 @@ exports.handler = ( event, context, callback ) => {
     const csvData = parseCsv( data.Body.toString() );
 
     // Second last line, immediately before the disclaimer.
-    const billingLineTotal = csvData.slice( -2, -1 )[0].pop();
+    const billingLineTotal = csvData.slice( SECOND_LAST_LINE, LAST_LINE )[ ONLY_ITEM ];
+    const totalPrice = billingLineTotal.pop();
 
-    const message = billingLineTotal;
+    const message = totalPrice;
+
+    console.log( message );
 
     sendSnsMessage( message ).then( ( response ) => {
       callback( null, response );
