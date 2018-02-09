@@ -1,2 +1,7 @@
-# aws-billing-alerts
-A simple Lambda function that sends SNS alerts when your current month's bill changes.
+# AWS Billing Alerts
+
+A simple [AWS Lambda](https://aws.amazon.com/lambda/) function that sends [SNS](https://aws.amazon.com/sns/) alerts when your current month's bill changes.
+
+## License
+
+[MIT](LICENSE).

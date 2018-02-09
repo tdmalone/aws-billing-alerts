@@ -1,0 +1,65 @@
+language: node_js
+services: docker
+node_js: 6.10
+
+env:
+  global:
+
+    - AWS_ACCESS_KEY_ID=AKIAJNPBZJSUNV7GJSVQ
+    - AWS_DEFAULT_REGION=ap-southeast-2
+    - LAMBDA_NAME=coffeeShopMessage
+    - LAMBDA_ALIAS=prod
+    - SNS_TOPIC_DEV=arn:aws:sns:ap-southeast-2:873114526714:tim-dev-queue
+
+    # SLACK_HOOK_DEV
+    - secure: fFs+/eD3LREWOpL/ItKheCN2OS51drZXk0txCCpS3k18okGm3X4Mz5MD7FxTRS6+VyN1h7wzXaBBCWHozcJwTqIFGEEagXjNRjoDaZFQLxY1wf+uZ1bV1zN5XtSFrFCXXWL6BhihsYp3B2j6z2HUfIUMG88Jj7dVBG8dWuVAEUHBLhU7wf3R5Q8QIhvRsyCS0HVYNBkpb1nt8FZtGpoaRalx+sYoeVR731pZa5N19GdCfnqtn0Pp/oAXsFuL60WOA6/iMU3vzh/Uj1phBTGHL7YtBr+HXziwCf0iLdxorA3A4twZQZHLWUYMHySB2G0+FaX5dSAy6Qn1luQTYADVW5iskccTTvKEOu4uXfUMFj3SDOibCrWKlIZtl+oWDsM6583EmmVB4oBGE8lQv9YRTWF8R6M/7GKJcuY6SO1eVWcUpg82gg0iShiOdOrXpSItCTpq4q2jqOfWWF+xKJARG+1Q7viNeQvkz4JVDrNx9SGJe8E01IA+pBvUU0z7lvL9cTy2obmVd0UkIFmMYvfl2TVlPNVCOR1BV56YYP4YQ64jIGvtIVE9H1oT3jrTHJmpm/ozxzBeteBU2jJomz0LnN/IT3mneRfzNlx+LpDBhdAoaidjh1aywpLMw7EhtAgAQb/gdC1Cr3EORoaky5HEagYWRWEz8/mdYbY/3qwrBWU=
+
+    # AWS_SECRET_ACCESS_KEY
+    - secure: B/HYX93UxL+IBTbhY2Umn3PSRWWin3mpNzkFTymCZQO5qf6OTakXUfolqlBxFMwmmQ8facYvWk6Lakrf41UWEe3rQyPgQ9ZzwwFZma60T/vF4bDIPN5bBXpEmTIBF1wyohHVRlVv7qzusTa9PGUvWwQagIQaTxgO2ux0pjFo7hoSlQCWrGvXOwfAAbxPM3oR4tqUyWUE4joEZToWMsNQXPE99EW7O1FmNImXH+K51okpW0vcVOw41c+ZPUjrsomzL2KRm9vz5NDP0071YG84xvuWjHlJVhsnkaPZeHzCzjpSDeVmMeQ6nOtpu+hRpf5R1aULkRsZItHGouTqZgDzhAok3fwwiuZKJwD6yyuNPQAM7JcKsjUIpNEhm8fs5DqZQIUFJkThhymRj345nNxPOMEOwliLFBoBrHI0VEXKMBYoDCZ7ra/M/tvK+kan0nuLtC+vtiYZBhx3yxwcK7fp6fk56jMci4pnrzWwAjapdm9H8FpZVshVRA6A9QgRdSrjMfpmej6TXWiDuDRv3Sw99vld5gJ7ghGAuhyqjCxY2LHYobUOtc91t0rcHMevIzw4MzE8unurA2ccIM2D2bEf3pSuB37i8YHIXsnGCe3O4Sa9nP0p5uImSAxWLRJJvCzjFTCYk4MbM7IhcxEXmCx+bTJPiMa5aDmxEVHMXlRlsiM=
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+install: yarn
+
+script:
+  - yarn lint
+  - yarn test
+
+before_deploy: rm -rf node_modules && yarn --prod && rm -rf node_modules/aws-sdk tests .*rc.js
+
+deploy:
+
+  - provider: lambda
+    publish: true
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: arn:aws:iam::873114526714:role/genericLambdaRole
+    description: Sends Slack and SNS messages when The Good Food Collective is closing for the day.
+    runtime: nodejs6.10
+    timeout: 15
+    handler_name: handler
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key:
+      secure: ZUxPk6qYx1UDXMxZAGS7qOmVu7TeEbYbzelp92AHv1DMImkrDt5wPBd7Abv7Is7UXK25/2LHsuZhigs87IxURTSOHxJabXvpIDJPwwlpWCDfxR+YnCNKJq1Onvgxq2lBhGfVCGItFin7bHt/AJUDij6ykWI7R4xP2v/TVRv9tvus1ixSiXCam+T+G7+GJxnzWBH6Guw6Cpa7YmqDh8bNUlBmzeuNkWVlX4sxCfgFokGHXnUIKWIIhe7TfNGgOqP4Epysh1RUEabhLBj5uowsHHEvGk99imyRvdMd03NcCl9Tgg55v4UC2jOPMWWWP173+hZYR1wzXdPkU4GLoD5t/Je8HR7l9vTMEr9f03WWcFLI/6R1pmlkjFbb2Uts/dPcNoeK5wsarDDJB9wliYb+Qrk3ete9IUiUuasMMfWGOHNmInkj8xZeO9uyd7+sj8IP2Kt6IJBKCZIMlZcnb1Li8YYbR4sETrkAVYryoamHjktnurHrnWTKbSyynmdouSKlHvf+kwTZanWySFW23PtZ6KVGJYe5TR51p8MoRv3i0g7hiqW6jjDyd/YesZCEg9XVvznJsMo69tTKEYkIPTsULSdYv5y3L2na6oW1HX2Xzbz+E1YT1gSj+om8np31fUA6kEiFjIslSbCf7wZEisgofgUgLTPCmT3j/KRkN5PVEj8=
+    skip_cleanup: true
+    on:
+      branch: master
+
+after_deploy:
+
+  # Set a Lambda alias to the most recently deployed version.
+  - pip install awscli --upgrade --user
+  - export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})")
+  - aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}"
+
+notifications:
+  email: false
+  webhooks:
+    urls: https://api.tm.id.au/dev/travis/jobStatus
+  slack:
+    on_start: always
+    rooms:
+      - secure: NIJMe7vHNS3JwNYW6YS/St5VgMWtaebI2AacQIuNCZFPVrs/mThhwwQe0hj31xC3BYq0LCAQLxnofO0HJKE9/p5f7uYBOWsFoMhhaw6B932dvFh2oKidDGTqirRaVp1XpbVGgC3/C+MkufcRAOwhqthu23H0JZkf42cqDw7ari8g9VPIKlWFtvOrNuGziNbDy2R9y0bNOmcvUJ0DVOqQMf72hT6VFQns8x4Bz9LYgAB+NZVVy/NOK+Ehr2RArPBbqhaVIDswi1IeCK94SFjur+OeVoxvsQYOAlM5CIC6ZF04FDaO+t9p30GtIccufjU6zSNRc618ozv/2NHE8XdoiAqAdE2IcLhdTwAGnbiFcCM/3V7UnasLAH+vsjwxQf+kSv1QgqunaGUq69vcK3fUZhgER08tZrDT/wsLNZ+0819+ujv3dwBM7pVzYioYPwHM/RyCHnrLLmie6zrSuwVCitmkAFC+dDK3Lz5Qg0iKRNIfpSBywjH3jOhhvOREVcgFVeGY2XeGU1ApB0Ug0A878Y/CdVE9fbgFVLCEKZGgOE1rMM2TFQBpF7r2vwY1HNEE2SC4PInSAKN592qhkygbrJVaDLPPoXph8DSAYBNPoddWnsMi8Nx+KgaPQeIiDsBVSbPFNWYfWuEY293KisNS6fHA6hI718dPaRoJeVwxwec=
