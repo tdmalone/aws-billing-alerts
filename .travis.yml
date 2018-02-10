@@ -10,6 +10,7 @@ env:
     - LAMBDA_NAME=awsBillingAlerts
     - LAMBDA_ALIAS=prod
     - SNS_TOPIC=arn:aws:sns:ap-southeast-2:873114526714:admin-notifications
+    - BUCKET_NAME=aws-admin-timmalone
 
     # AWS_SECRET_ACCESS_KEY
     - secure: V2p3mGY5eUNEQPEkXhJ/94mLX0eZ0vh1IPCmoNjjVsYrl4uHLTGFUp4/+eq6vFTFDPYX+SCz0kyzvPjMOG3IB+BZrbIWBS4Lz9ryZPj0JEisulfwlE5BSjzTkch7kC5jt+Ii44k9liV2VellrUgd2/GtwjmFyOWUUrPwe4qeBSMAHFOS5g3lGweaQJFPXuM03YFg8DrpyY7qC+vH0X6COvXZdQvnTMzqFw8yWc6lD9Yi13yirutjp5MK03iqUSnvcqjb4/ziU2pj1nXhjRQRLwLcKgy/p4QnV/+BUm/kA/BR2BkkG892CXanNqbQjqGjdtXmVvmac6j1Es16PsDiOs7f9DM6hzDxDFHFd9F9jblvRQdnZSwWfxk6KhpMxcxV2+iwO0XpTRpIIDe/Z3pIgIBP9RrkoJXCSyc2J5Dq5prKNdmZWvp3Eeq5F21QXpKt1g90z8nK/fnOhve/TuoT4/wGoQunZg6lST5Kwx8gtP3og575Gcw/hUmm8fYvsMhF9w+d5S2zE897SgOiSHLKcoIsOgZtr8pz5IC9vooal/vu5y8r0QXiNZMHJVuQg1UhbKH2WBb5oCUoKg891FEk7RSudRxo8HFFLWoHHhmCDLvAJQm+TjfSJ9mA6lvPpjkdRlU9jd0YKEJl3cXx7JvZjrdcQpoYjvhs0UdkhpK+U94=

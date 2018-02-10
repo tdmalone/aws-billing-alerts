@@ -31,6 +31,7 @@ Integration tests require [Docker](https://docs.docker.com/install/). They run i
 The following environment variables must be defined on your system:
 
 * `SNS_TOPIC`
+* `BUCKET_NAME`
 * `AWS_ACCESS_KEY_ID`
 * `AWS_SECRET_ACCESS_KEY`
 * `AWS_DEFAULT_REGION`
