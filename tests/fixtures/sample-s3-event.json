@@ -11,12 +11,12 @@
         "object": {
           "eTag": "0123456789abcdef0123456789abcdef",
           "sequencer": "0A1B2C3D4E5F678901",
-          "key": "873114526714-aws-billing-csv-2018-02.csv",
+          "key": "{AWS_ACCOUNT_ID}-aws-billing-csv-{CURRENT_YEAR}-{CURRENT_MONTH}.csv",
           "size": 1024
         },
         "bucket": {
-          "arn": "arn:aws:s3:::aws-admin-timmalone",
-          "name": "aws-admin-timmalone",
+          "arn": "arn:aws:s3:::{BUCKET_NAME}",
+          "name": "{BUCKET_NAME}",
           "ownerIdentity": {
             "principalId": "EXAMPLE"
           }

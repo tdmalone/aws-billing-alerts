@@ -11,8 +11,8 @@
     "lint": "cross-env DEBUG=eslint:cli-engine eslint --color --ignore-pattern '/coverage/' --ignore-pattern '/docs/' --ignore-pattern '!.eslintrc.js' \"**/*.js\"",
     "fix": "yarn lint --fix",
     "test": "yarn unit-tests && yarn docker-tests",
-    "unit-tests": "jest --verbose --coverage",
-    "docker-tests": "docker run --rm -e CI -e SNS_TOPIC -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -v \"${PWD}\":/var/task lambci/lambda:nodejs6.10 index.handler \"$( cat tests/fixtures/sample-s3-event.json )\""
+    "unit-tests": "TESTING=true jest --verbose --coverage",
+    "docker-tests": "TESTING=true docker run --rm -e TESTING -e SNS_TOPIC -e BUCKET_NAME -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -v \"${PWD}\":/var/task lambci/lambda:nodejs6.10 index.handler \"$( cat tests/fixtures/sample-s3-event.json )\""
   },
   "keywords": [
     "aws",

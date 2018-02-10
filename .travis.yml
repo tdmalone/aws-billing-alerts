@@ -10,6 +10,7 @@ env:
     - LAMBDA_NAME=awsBillingAlerts
     - LAMBDA_ALIAS=prod
     - SNS_TOPIC=arn:aws:sns:ap-southeast-2:873114526714:admin-notifications
+    - BUCKET_NAME=aws-admin-timmalone
 
     # AWS_SECRET_ACCESS_KEY
     - secure: V2p3mGY5eUNEQPEkXhJ/94mLX0eZ0vh1IPCmoNjjVsYrl4uHLTGFUp4/+eq6vFTFDPYX+SCz0kyzvPjMOG3IB+BZrbIWBS4Lz9ryZPj0JEisulfwlE5BSjzTkch7kC5jt+Ii44k9liV2VellrUgd2/GtwjmFyOWUUrPwe4qeBSMAHFOS5g3lGweaQJFPXuM03YFg8DrpyY7qC+vH0X6COvXZdQvnTMzqFw8yWc6lD9Yi13yirutjp5MK03iqUSnvcqjb4/ziU2pj1nXhjRQRLwLcKgy/p4QnV/+BUm/kA/BR2BkkG892CXanNqbQjqGjdtXmVvmac6j1Es16PsDiOs7f9DM6hzDxDFHFd9F9jblvRQdnZSwWfxk6KhpMxcxV2+iwO0XpTRpIIDe/Z3pIgIBP9RrkoJXCSyc2J5Dq5prKNdmZWvp3Eeq5F21QXpKt1g90z8nK/fnOhve/TuoT4/wGoQunZg6lST5Kwx8gtP3og575Gcw/hUmm8fYvsMhF9w+d5S2zE897SgOiSHLKcoIsOgZtr8pz5IC9vooal/vu5y8r0QXiNZMHJVuQg1UhbKH2WBb5oCUoKg891FEk7RSudRxo8HFFLWoHHhmCDLvAJQm+TjfSJ9mA6lvPpjkdRlU9jd0YKEJl3cXx7JvZjrdcQpoYjvhs0UdkhpK+U94=
@@ -25,12 +26,17 @@ script:
   - yarn lint
   - yarn test
 
-before_deploy: yarn remove aws-sdk && rm -rf node_modules tests .*rcs.js && yarn --prod
+before_deploy: yarn remove aws-sdk && rm -rf coverage node_modules tests .*rcs.js && yarn --prod
 
 deploy:
 
-  - provider: lambda
-    publish: true
+  # Deploy to $LATEST on dev branch. (i.e. don't publish a new version).
+
+  - on:
+      branch: dev
+    publish: false
+
+    provider: lambda
     function_name: $LAMBDA_NAME
     region: $AWS_DEFAULT_REGION
     role: arn:aws:iam::873114526714:role/genericLambdaRole
@@ -39,23 +45,42 @@ deploy:
     timeout: 30
     handler_name: handler
     access_key_id: $AWS_ACCESS_KEY_ID
-    secret_access_key:
-      secure: po1pSGhLFg/Snf5SDfV9P2s35ihDILeGv6Qcbo6LqKYQt+br3v1LdACk5sjt448L/RMPuH+hWc/RlpnxU1+OzosT3YnGq+Wd+jXIUUvJy4Bd1fg5Qq+6JaVVXpDVXZWdgO4RwtN8q+PqrtnmscvXeiaop/dfv7eBjIHZR314QPSpWORldxLfVg+HuU5UohwHhp/WWcgLjTJ0eDnvVU03c0ji/WiHSkLj2jhnSe0jzlAXmpXaJV0YdqrwJKMmDssALcdsV26Ms81Z5sO/usLf96X5Cyq+apu8GXuSEKKSvFhN46fwweAZqFeB4uB/NxX8EFNQuKVyJEOpDEGF3tgpZsbPMF2o4bwxRheJgbBaT/q/DyxUlrvRfkxdIDYF8Z8+LNd5f5W4uSjuOBD3f6wMnn64CktMxuZOaSfInWDFKC12GSZ6KRYCYSceIz4uks3iPqPRfb4L0DUQ62cLv5rjHuSFxRIhALYg51ZX6sSKLowaGtz7ba2BU8oZYmAybJpRuuWSc8QWrJEG1WfIfkc/fc8RS7wgEnW2oK8EARK1m4XSyOoYX4vPGBj9UUEjj56O3MDImV35G6Zu4ccDLZjCur1wquq1RDqCYZhr5cqMAi0T/9gKweMU1L1GTNhBBCljnfWC+Zs/uxvcLq3GTBSUjF1oPhuXsPzj1JKadkFHdMM=
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
     skip_cleanup: true
-    on:
+
+
+  # Deploy and publish a new version on master branch.
+
+  - on:
       branch: master
+    publish: true
+
+    provider: lambda
+    function_name: $LAMBDA_NAME
+    region: $AWS_DEFAULT_REGION
+    role: arn:aws:iam::873114526714:role/genericLambdaRole
+    description: Sends SNS alerts when the current month's bill changes.
+    runtime: nodejs6.10
+    timeout: 30
+    handler_name: handler
+    access_key_id: $AWS_ACCESS_KEY_ID
+    secret_access_key: $AWS_SECRET_ACCESS_KEY
+    skip_cleanup: true
+
 
 after_deploy:
 
   # Set a Lambda alias to the most recently deployed version.
-  - pip install awscli --upgrade --user
-  - export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})")
-  - aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}"
+  - if [ "master" = "${TRAVIS_BRANCH}" ]; then
+      pip install awscli --upgrade --user;
+      export MOST_RECENT=$(aws lambda list-versions-by-function --function "${LAMBDA_NAME}" --max-items 10000 | node -e "let stdin=''; process.stdin.on('data',(chunk)=>{stdin+=chunk}).on('end',()=>{console.log(JSON.parse(stdin).Versions.pop().Version)})");
+      aws lambda update-alias --function-name "${LAMBDA_NAME}" --name "${LAMBDA_ALIAS}" --function-version "${MOST_RECENT}";
+    fi;
 
 notifications:
   email: false
   webhooks:
-    urls: https://api.tm.id.au/v1/travis/jobStatus
+    urls: https://api.tm.id.au/v2/travis/jobStatus
   slack:
     on_start: always
     rooms:
