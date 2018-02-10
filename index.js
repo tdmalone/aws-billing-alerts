@@ -17,6 +17,7 @@ const SNS_TOPIC = process.env.SNS_TOPIC,
 
 const FIRST_ITEM = 0,
       ONLY_ITEM = 0,
+      MAKE_1_BASED = 1,
       SECOND_LAST_LINE = -2,
       LAST_LINE = -1;
 
@@ -61,7 +62,7 @@ function getS3Params( event ) {
 
     // Get the user's AWS account ID, which makes up part of the object key we need to retrieve.
     const sts = new aws.STS();
-    sts.getCallerIdentity( {}, ( error, data ) => {
+    sts.getCallerIdentity({}, ( error, data ) => {
 
       if ( error ) {
         reject( error );
@@ -78,7 +79,7 @@ function getS3Params( event ) {
 
         Key: event.Records[ FIRST_ITEM ].s3.object.key
           .replace( '{CURRENT_YEAR}', currentDate.getFullYear() )
-          .replace( '{CURRENT_MONTH}', padTo2Digits( currentDate.getMonth() + 1 ) )
+          .replace( '{CURRENT_MONTH}', padTo2Digits( currentDate.getMonth() + MAKE_1_BASED ) )
           .replace( '{AWS_ACCOUNT_ID}', awsAccountId )
 
       }); // Resolve.
@@ -86,6 +87,9 @@ function getS3Params( event ) {
   }); // Return new Promise.
 } // Function processEventData.
 
+/**
+ * Retrieves billing data from S3, as saved by AWS Billing.
+ */
 function getBillingData( params ) {
   return new Promise( ( resolve, reject ) => {
 
@@ -108,8 +112,11 @@ function getBillingData( params ) {
   }); // Return new Promise.
 } // Function getBillingData.
 
+/**
+ * Processes billing data to gather just what we need.
+ */
 function processBillingData( data ) {
-  return new Promise( ( resolve, reject ) => {
+  return new Promise( ( resolve ) => {
 
     const csvData = parseCsv( data.Body.toString() );
 
@@ -124,6 +131,10 @@ function processBillingData( data ) {
   }); // Return new Promise.
 } // Function processBillingData.
 
+/**
+ * Determines whether or not to send a notification message (well, at least, it *will* determine -
+ * currently it just sends it no matter what ;) ).
+ */
 function maybeSendMessage( totalPrice ) {
   return new Promise( ( resolve, reject ) => {
 
@@ -179,6 +190,9 @@ function sendSnsMessage( message ) {
   }); // Return Promise.
 } // Function sendSnsMessage.
 
+/**
+ * Pads a 1 digit number so it starts with a 0.
+ */
 function padTo2Digits( number ) {
-  return number < 10 ? '0' + number : number;
+  return number < 10 ? '0' + number : number; // eslint-disable-line no-magic-numbers, yoda
 }
